@@ -1,14 +1,17 @@
 package com.duoc.mscitasmedicas.controller;
 
-import com.duoc.mscitasmedicas.model.CitaMedica;
+import com.duoc.mscitasmedicas.dto.request.CitaRequestDto;
+import com.duoc.mscitasmedicas.dto.response.CitaResponseDto;
+import com.duoc.mscitasmedicas.dto.response.MensajeResponseDto;
 import com.duoc.mscitasmedicas.service.CitaService;
+import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/citas")
@@ -21,99 +24,58 @@ public class CitaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CitaMedica>> listarCitas() {
+    public ResponseEntity<List<CitaResponseDto>> listarCitas() {
         return ResponseEntity.ok(citaService.obtenerCitas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtenerCitaPorId(@PathVariable int id) {
-        CitaMedica cita = citaService.buscarPorId(id);
-
-        if (cita == null) {
-            Map<String, String> respuesta = new HashMap<>();
-            respuesta.put("mensaje", "Cita no encontrada");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(respuesta);
-        }
-
-        return ResponseEntity.ok(cita);
+    public ResponseEntity<CitaResponseDto> obtenerCitaPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(citaService.buscarPorId(id));
     }
 
     @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<CitaMedica>> obtenerCitasPorEstado(@PathVariable String estado) {
+    public ResponseEntity<List<CitaResponseDto>> obtenerCitasPorEstado(@PathVariable String estado) {
         return ResponseEntity.ok(citaService.buscarPorEstado(estado));
     }
 
     @GetMapping("/fecha/{fecha}")
-    public ResponseEntity<List<CitaMedica>> obtenerCitasPorFecha(@PathVariable String fecha) {
+    public ResponseEntity<List<CitaResponseDto>> obtenerCitasPorFecha(
+            @PathVariable
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fecha
+    ) {
         return ResponseEntity.ok(citaService.buscarPorFecha(fecha));
     }
 
     @GetMapping("/disponibilidad/{fecha}")
-    public ResponseEntity<List<String>> consultarDisponibilidad(@PathVariable String fecha) {
+    public ResponseEntity<List<String>> consultarDisponibilidad(
+            @PathVariable
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fecha
+    ) {
         return ResponseEntity.ok(citaService.consultarDisponibilidad(fecha));
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> programarCita(@RequestBody CitaMedica nuevaCita) {
-        String resultado = citaService.programarCita(nuevaCita);
-
-        Map<String, String> respuesta = new HashMap<>();
-        respuesta.put("mensaje", resultado);
-
-        if (resultado.startsWith("Error")) {
-            return ResponseEntity.badRequest().body(respuesta);
-        }
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
+    public ResponseEntity<MensajeResponseDto> programarCita(@Valid @RequestBody CitaRequestDto nuevaCita) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(citaService.programarCita(nuevaCita));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, String>> actualizarCita(@PathVariable int id, @RequestBody CitaMedica citaActualizada) {
-        String resultado = citaService.actualizarCita(id, citaActualizada);
-
-        Map<String, String> respuesta = new HashMap<>();
-        respuesta.put("mensaje", resultado);
-
-        if (resultado.equals("Error: cita no encontrada")) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(respuesta);
-        }
-
-        if (resultado.startsWith("Error")) {
-            return ResponseEntity.badRequest().body(respuesta);
-        }
-
-        return ResponseEntity.ok(respuesta);
+    public ResponseEntity<MensajeResponseDto> actualizarCita(
+            @PathVariable Long id,
+            @Valid @RequestBody CitaRequestDto citaActualizada
+    ) {
+        return ResponseEntity.ok(citaService.actualizarCita(id, citaActualizada));
     }
 
     @PutMapping("/cancelar/{id}")
-    public ResponseEntity<Map<String, String>> cancelarCita(@PathVariable int id) {
-        String resultado = citaService.cancelarCita(id);
-
-        Map<String, String> respuesta = new HashMap<>();
-        respuesta.put("mensaje", resultado);
-
-        if (resultado.equals("Error: cita no encontrada")) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(respuesta);
-        }
-
-        if (resultado.startsWith("Error")) {
-            return ResponseEntity.badRequest().body(respuesta);
-        }
-
-        return ResponseEntity.ok(respuesta);
+    public ResponseEntity<MensajeResponseDto> cancelarCita(@PathVariable Long id) {
+        return ResponseEntity.ok(citaService.cancelarCita(id));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> eliminarCita(@PathVariable int id) {
-        String resultado = citaService.eliminarCita(id);
-
-        Map<String, String> respuesta = new HashMap<>();
-        respuesta.put("mensaje", resultado);
-
-        if (resultado.equals("Error: cita no encontrada")) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(respuesta);
-        }
-
-        return ResponseEntity.ok(respuesta);
+    public ResponseEntity<MensajeResponseDto> eliminarCita(@PathVariable Long id) {
+        return ResponseEntity.ok(citaService.eliminarCita(id));
     }
 }
