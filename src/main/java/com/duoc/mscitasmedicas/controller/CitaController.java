@@ -6,12 +6,17 @@ import com.duoc.mscitasmedicas.dto.response.MensajeResponseDto;
 import com.duoc.mscitasmedicas.service.CitaService;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.hateoas.Link;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 
 @RestController
 @RequestMapping("/citas")
@@ -30,7 +35,16 @@ public class CitaController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CitaResponseDto> obtenerCitaPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(citaService.buscarPorId(id));
+        CitaResponseDto cita = citaService.buscarPorId(id);
+
+        cita.add(linkTo(methodOn(CitaController.class).obtenerCitaPorId(id)).withSelfRel());
+        cita.add(linkTo(methodOn(CitaController.class).listarCitas()).withRel("listar"));
+        cita.add(Link.of("/citas/" + id, "actualizar"));
+        cita.add(Link.of("/citas/" + id, "eliminar"));
+        cita.add(Link.of("/citas/cancelar/" + id, "cancelar"));
+        cita.add(Link.of("/citas", "programar"));
+
+        return ResponseEntity.ok(cita);
     }
 
     @GetMapping("/estado/{estado}")

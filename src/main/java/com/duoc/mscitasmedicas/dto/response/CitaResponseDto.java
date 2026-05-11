@@ -3,12 +3,13 @@ package com.duoc.mscitasmedicas.dto.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.time.LocalDate;
 
 @Getter
 @Setter
-public class CitaResponseDto {
+public class CitaResponseDto extends RepresentationModel<CitaResponseDto> {
 
     private Long id;
     private String paciente;
